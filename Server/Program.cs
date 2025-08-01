@@ -11,10 +11,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 // Se añadio el siguiente builder para el DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(
-        builder.Configuration.GetConnectionString("DefaultConnection") ,
-        new MySqlServerVersion(new Version(8, 0, 34))
-        ));
+    options.UseMySQL( // ¡Cambiado a UseMySQL (con "M" mayúscula)!
+        builder.Configuration.GetConnectionString("DefaultConnection")
+    )
+);
 
 var app = builder.Build();
 
