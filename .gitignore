@@ -417,3 +417,10 @@ FodyWeavers.xsd
 *.msm
 *.msp
 server/blogbackend/
+
+# Excluir configuraciones sensibles
+#appsettings.json
+#appsettings.*.json
+
+# Secrets de desarrollo
+#secrets.json
