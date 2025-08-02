@@ -419,8 +419,8 @@ FodyWeavers.xsd
 server/blogbackend/
 
 # Excluir configuraciones sensibles
-#appsettings.json
-#appsettings.*.json
+appsettings.json
+appsettings.*.json
 
 # Secrets de desarrollo
-#secrets.json
+secrets.json
