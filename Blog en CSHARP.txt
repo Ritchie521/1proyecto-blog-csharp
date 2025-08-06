@@ -2,5 +2,5 @@ Datos sobre el proyecto de Blog full stack con ayuda de deepseek
 
 Tecnologías:
 - Base de datos - MySQL
-- Backend - CSharp
+- Backend - CSharp (Visual Studio 2022)
 - Frontend - html, css, javascript
