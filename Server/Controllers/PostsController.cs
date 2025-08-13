@@ -38,6 +38,11 @@ namespace BlogBackend.Controllers
         [HttpPost]
         public async Task<ActionResult<Post>> CreatePost(Post post)
         {
+            if (!ModelState.IsValid) // Esto es redundante con [ApiController], pero se puede usar para lógica adicional
+            {
+                return BadRequest(ModelState);
+            }
+
             _context.Posts.Add(post);
             await _context.SaveChangesAsync();
 
@@ -53,6 +58,21 @@ namespace BlogBackend.Controllers
                 .ToListAsync();
 
             return Ok(comments);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleetePost(int id)
+        {
+            var post = await _context.Posts.FindAsync(id);
+            if (post == null)
+            {
+                return NotFound();
+            }
+
+            _context.Posts.Remove(post);
+            await _context.SaveChangesAsync();
+
+            return NoContent(); // Código 204 (éxito sin contenido de retorno)
         }
     }
 
