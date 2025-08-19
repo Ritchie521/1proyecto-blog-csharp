@@ -2,11 +2,14 @@
 using Microsoft.EntityFrameworkCore;
 using BlogBackend.Data;
 using BlogBackend.Models;
+using BlogBackend.DTOs;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BlogBackend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")] // la ruta base será "/api/posts"
+
     public class PostsController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -17,17 +20,25 @@ namespace BlogBackend.Controllers
             _context = context;
         }
 
+        [AllowAnonymous]
         [HttpGet]
-        public async Task<ActionResult<List<Post>>> GetPosts()
+        public async Task<ActionResult<List<Post>>> GetPosts(CancellationToken ct)
         {
-            var posts = await _context.Posts.ToListAsync();
+            var posts = await _context.Posts
+                .AsNoTracking()
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+
             return Ok(posts);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Post>> GetPost(int id)
+        [AllowAnonymous]
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<Post>> GetPost(int id, CancellationToken ct)
         {
-            var post = await _context.Posts.FindAsync(id);
+            var post = await _context.Posts
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == id, ct);
 
             if (post == null)
                 return NotFound(); // Código 404 si no existe
@@ -35,20 +46,27 @@ namespace BlogBackend.Controllers
             return Ok(post);
         }
 
+        [Authorize]
         [HttpPost]
-        public async Task<ActionResult<Post>> CreatePost(Post post)
+        public async Task<ActionResult<Post>> CreatePost([FromBody] CreatePostDto dto, CancellationToken ct)
         {
-            if (!ModelState.IsValid) // Esto es redundante con [ApiController], pero se puede usar para lógica adicional
+            if (string.IsNullOrWhiteSpace(dto.Title) || string.IsNullOrWhiteSpace(dto.Content)) // Esto es redundante con [ApiController], pero se puede usar para lógica adicional
+                return BadRequest("Title y Content son obligatorios.");
+
+            var post = new Post
             {
-                return BadRequest(ModelState);
-            }
+                Title = dto.Title.Trim(),
+                Content = dto.Content.Trim(),
+                CreatedAt = DateTime.UtcNow // Valor del servidor
+            };
 
             _context.Posts.Add(post);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(ct);
 
             return CreatedAtAction(nameof(GetPost), new { id = post.Id }, post);
         }
 
+        [AllowAnonymous]
         [HttpGet("{id}/comments")]
         public async Task<ActionResult<List<Comment>>> GetPostComments(int id)
         {
@@ -60,8 +78,9 @@ namespace BlogBackend.Controllers
             return Ok(comments);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleetePost(int id)
+        public async Task<IActionResult> DeletePost(int id)
         {
             var post = await _context.Posts.FindAsync(id);
             if (post == null)
